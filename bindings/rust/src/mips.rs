@@ -4,7 +4,7 @@
 // MIPS registers
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum RegisterMIPS {
+pub enum Register {
     INVALID = 0,
 
     // General purpose registers
@@ -160,7 +160,7 @@ pub enum RegisterMIPS {
     ENDING = 140,
 }
 
-impl RegisterMIPS {
+impl Register {
     // alias registers
     // (assoc) ZERO = 2,
     // (assoc) AT = 3,
@@ -203,51 +203,51 @@ impl RegisterMIPS {
     // (assoc) LO1 = 46,
     // (assoc) LO2 = 47,
     // (assoc) LO3 = 48,
-    pub const ZERO: RegisterMIPS = RegisterMIPS::GPR0;
-    pub const AT: RegisterMIPS = RegisterMIPS::GPR1;
-    pub const V0: RegisterMIPS = RegisterMIPS::GPR2;
-    pub const V1: RegisterMIPS = RegisterMIPS::GPR3;
-    pub const A0: RegisterMIPS = RegisterMIPS::GPR4;
-    pub const A1: RegisterMIPS = RegisterMIPS::GPR5;
-    pub const A2: RegisterMIPS = RegisterMIPS::GPR6;
-    pub const A3: RegisterMIPS = RegisterMIPS::GPR7;
-    pub const T0: RegisterMIPS = RegisterMIPS::GPR8;
-    pub const T1: RegisterMIPS = RegisterMIPS::GPR9;
-    pub const T2: RegisterMIPS = RegisterMIPS::GPR10;
-    pub const T3: RegisterMIPS = RegisterMIPS::GPR11;
-    pub const T4: RegisterMIPS = RegisterMIPS::GPR12;
-    pub const T5: RegisterMIPS = RegisterMIPS::GPR13;
-    pub const T6: RegisterMIPS = RegisterMIPS::GPR14;
-    pub const T7: RegisterMIPS = RegisterMIPS::GPR15;
-    pub const S0: RegisterMIPS = RegisterMIPS::GPR16;
-    pub const S1: RegisterMIPS = RegisterMIPS::GPR17;
-    pub const S2: RegisterMIPS = RegisterMIPS::GPR18;
-    pub const S3: RegisterMIPS = RegisterMIPS::GPR19;
-    pub const S4: RegisterMIPS = RegisterMIPS::GPR20;
-    pub const S5: RegisterMIPS = RegisterMIPS::GPR21;
-    pub const S6: RegisterMIPS = RegisterMIPS::GPR22;
-    pub const S7: RegisterMIPS = RegisterMIPS::GPR23;
-    pub const T8: RegisterMIPS = RegisterMIPS::GPR24;
-    pub const T9: RegisterMIPS = RegisterMIPS::GPR25;
-    pub const K0: RegisterMIPS = RegisterMIPS::GPR26;
-    pub const K1: RegisterMIPS = RegisterMIPS::GPR27;
-    pub const GP: RegisterMIPS = RegisterMIPS::GPR28;
-    pub const SP: RegisterMIPS = RegisterMIPS::GPR29;
-    pub const FP: RegisterMIPS = RegisterMIPS::GPR30;
-    pub const S8: RegisterMIPS = RegisterMIPS::GPR30;
-    pub const RA: RegisterMIPS = RegisterMIPS::GPR31;
-    pub const HI0: RegisterMIPS = RegisterMIPS::AC0;
-    pub const HI1: RegisterMIPS = RegisterMIPS::AC1;
-    pub const HI2: RegisterMIPS = RegisterMIPS::AC2;
-    pub const HI3: RegisterMIPS = RegisterMIPS::AC3;
-    pub const LO0: RegisterMIPS = RegisterMIPS::AC0;
-    pub const LO1: RegisterMIPS = RegisterMIPS::AC1;
-    pub const LO2: RegisterMIPS = RegisterMIPS::AC2;
-    pub const LO3: RegisterMIPS = RegisterMIPS::AC3;
+    pub const ZERO: Register = Register::GPR0;
+    pub const AT: Register = Register::GPR1;
+    pub const V0: Register = Register::GPR2;
+    pub const V1: Register = Register::GPR3;
+    pub const A0: Register = Register::GPR4;
+    pub const A1: Register = Register::GPR5;
+    pub const A2: Register = Register::GPR6;
+    pub const A3: Register = Register::GPR7;
+    pub const T0: Register = Register::GPR8;
+    pub const T1: Register = Register::GPR9;
+    pub const T2: Register = Register::GPR10;
+    pub const T3: Register = Register::GPR11;
+    pub const T4: Register = Register::GPR12;
+    pub const T5: Register = Register::GPR13;
+    pub const T6: Register = Register::GPR14;
+    pub const T7: Register = Register::GPR15;
+    pub const S0: Register = Register::GPR16;
+    pub const S1: Register = Register::GPR17;
+    pub const S2: Register = Register::GPR18;
+    pub const S3: Register = Register::GPR19;
+    pub const S4: Register = Register::GPR20;
+    pub const S5: Register = Register::GPR21;
+    pub const S6: Register = Register::GPR22;
+    pub const S7: Register = Register::GPR23;
+    pub const T8: Register = Register::GPR24;
+    pub const T9: Register = Register::GPR25;
+    pub const K0: Register = Register::GPR26;
+    pub const K1: Register = Register::GPR27;
+    pub const GP: Register = Register::GPR28;
+    pub const SP: Register = Register::GPR29;
+    pub const FP: Register = Register::GPR30;
+    pub const S8: Register = Register::GPR30;
+    pub const RA: Register = Register::GPR31;
+    pub const HI0: Register = Register::AC0;
+    pub const HI1: Register = Register::AC1;
+    pub const HI2: Register = Register::AC2;
+    pub const HI3: Register = Register::AC3;
+    pub const LO0: Register = Register::AC0;
+    pub const LO1: Register = Register::AC1;
+    pub const LO2: Register = Register::AC2;
+    pub const LO3: Register = Register::AC3;
 }
 
-impl From<RegisterMIPS> for i32 {
-    fn from(r: RegisterMIPS) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }

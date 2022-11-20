@@ -2,7 +2,7 @@
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
 #[allow(non_camel_case_types)]
-pub enum RegisterARM64 {
+pub enum Register {
     INVALID = 0,
     X29 = 1,
     X30 = 2,
@@ -311,15 +311,15 @@ pub enum RegisterARM64 {
     // (assoc) LR = 2,
 }
 
-impl RegisterARM64 {
-    pub const IP0: RegisterARM64 = RegisterARM64::X16;
-    pub const IP1: RegisterARM64 = RegisterARM64::X17;
-    pub const FP: RegisterARM64 = RegisterARM64::X29;
-    pub const LR: RegisterARM64 = RegisterARM64::X30;
+impl Register {
+    pub const IP0: Register = Register::X16;
+    pub const IP1: Register = Register::X17;
+    pub const FP: Register = Register::X29;
+    pub const LR: Register = Register::X30;
 }
 
-impl From<RegisterARM64> for i32 {
-    fn from(r: RegisterARM64) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }

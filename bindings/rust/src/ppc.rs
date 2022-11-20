@@ -4,7 +4,7 @@
 // PowerPC registers
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum RegisterPPC {
+pub enum Register {
     INVALID = 0,
     PC = 1,
     GPR0 = 2,
@@ -41,8 +41,8 @@ pub enum RegisterPPC {
     GPR31 = 33,
 }
 
-impl From<RegisterPPC> for i32 {
-    fn from(r: RegisterPPC) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }

@@ -6,55 +6,48 @@
 //!
 //! ```rust
 //!
-//! use unicorn_engine::RegisterARM;
-//! use unicorn_engine::unicorn_const::{Arch, Mode, Permission, SECOND_SCALE};
+//! use unicornafl::Unicorn;
+//! use unicornafl::arm::Register;
+//! use unicornafl::consts::{Arch, Mode, Permission, SECOND_SCALE};
 //!
-//! fn emulate() {
-//!     let arm_code32 = [0x17, 0x00, 0x40, 0xe2]; // sub r0, #23
+//! let arm_code32 = [0x17, 0x00, 0x40, 0xe2]; // sub r0, #23
 //!
-//!     let mut emu = unicorn_engine::Unicorn::new(Arch::ARM, Mode::LITTLE_ENDIAN).expect("failed to initialize Unicorn instance");
-//!     emu.mem_map(0x1000, 0x4000, Permission::ALL).expect("failed to map code page");
-//!     emu.mem_write(0x1000, &arm_code32).expect("failed to write instructions");
+//! let mut emu = Unicorn::new(Arch::ARM, Mode::LITTLE_ENDIAN).expect("failed to initialize Unicorn instance");
+//! emu.mem_map(0x1000, 0x4000, Permission::ALL).expect("failed to map code page");
+//! emu.mem_write(0x1000, &arm_code32).expect("failed to write instructions");
 //!
-//!     emu.reg_write(RegisterARM::R0, 123).expect("failed write R0");
-//!     emu.reg_write(RegisterARM::R5, 1337).expect("failed write R5");
+//! emu.reg_write(Register::R0, 123).expect("failed write R0");
+//! emu.reg_write(Register::R5, 1337).expect("failed write R5");
 //!
-//!     emu.emu_start(0x1000, (0x1000 + arm_code32.len()) as u64, 10 * SECOND_SCALE, 1000).unwrap();
-//!     assert_eq!(emu.reg_read(RegisterARM::R0), Ok(100));
-//!     assert_eq!(emu.reg_read(RegisterARM::R5), Ok(1337));
-//! }
+//! emu.emu_start(0x1000, (0x1000 + arm_code32.len()) as u64, 10 * SECOND_SCALE, 1000).unwrap();
+//! assert_eq!(emu.reg_read(Register::R0), Ok(100));
+//! assert_eq!(emu.reg_read(Register::R5), Ok(1337));
 //! ```
 //!
 
-#[macro_use]
-extern crate alloc;
-
-extern crate link_cplusplus;
-
-pub mod unicorn_const;
-
-mod arm;
-mod arm64;
-mod ffi;
-mod m68k;
-mod mips;
-mod ppc;
-mod riscv;
-mod sparc;
-mod x86;
-
-pub use crate::{
-    arm::*, arm64::*, m68k::*, mips::*, ppc::*, riscv::*, sparc::*, unicorn_const::*, x86::*,
-};
-
 pub mod afl;
-pub mod utils;
+pub mod arm;
+pub mod arm64;
+pub mod consts;
+pub mod m68k;
+pub mod mips;
+pub mod ppc;
+pub mod riscv;
+pub mod sparc;
+pub mod x86;
 
-use alloc::{boxed::Box, rc::Rc, vec::Vec};
-use core::{cell::UnsafeCell, ptr};
-use ffi::uc_handle;
-use libc::c_void;
-use unicorn_const::{uc_error, Arch, HookType, MemRegion, MemType, Mode, Permission, Query};
+mod ffi;
+
+use crate::consts::{uc_error, Arch, HookType, MemRegion, MemType, Mode, Permission, Query};
+use crate::ffi::uc_handle;
+
+use std::cell::UnsafeCell;
+use std::ffi::c_void;
+use std::fmt;
+use std::mem;
+use std::ptr;
+use std::rc::Rc;
+use tinyvec::ArrayVec;
 
 #[derive(Debug)]
 pub struct Context {
@@ -91,43 +84,41 @@ impl<'a> MmioCallbackScope<'a> {
     }
 
     fn unmap(&mut self, begin: u64, size: usize) {
-        let end: u64 = begin + size as u64;
+        let end = begin + size as u64;
         self.regions = self
             .regions
             .iter()
             .flat_map(|(b, s)| {
-                let e: u64 = b + *s as u64;
+                let e = b + *s as u64;
+                let mut v = ArrayVec::<[(u64, usize); 2]>::new();
                 if begin > *b {
                     if begin >= e {
                         // The unmapped region is completely after this region
-                        vec![(*b, *s)]
                     } else {
                         if end >= e {
                             // The unmapped region overlaps with the end of this region
-                            vec![(*b, (begin - *b) as usize)]
+                            v.push((*b, (begin - *b) as usize));
                         } else {
                             // The unmapped region is in the middle of this region
                             let second_b = end + 1;
-                            vec![
-                                (*b, (begin - *b) as usize),
-                                (second_b, (e - second_b) as usize),
-                            ]
+                            v.push((*b, (begin - *b) as usize));
+                            v.push((second_b, (e - second_b) as usize));
                         }
                     }
                 } else {
                     if end > *b {
                         if end >= e {
                             // The unmapped region completely contains this region
-                            vec![]
                         } else {
                             // The unmapped region overlaps with the start of this region
-                            vec![(end, (e - end) as usize)]
+                            v.push((end, (e - end) as usize));
                         }
                     } else {
                         // The unmapped region is completely before this region
-                        vec![(*b, *s)]
+                        v.push((*b, *s));
                     }
-                }
+                };
+                v
             })
             .collect();
     }
@@ -173,7 +164,7 @@ where
     /// Create a new instance of the unicorn engine for the specified architecture
     /// and hardware mode.
     pub fn new_with_data(arch: Arch, mode: Mode, data: D) -> Result<Unicorn<'a, D>, uc_error> {
-        let mut handle = core::ptr::null_mut();
+        let mut handle = ptr::null_mut();
         let err = unsafe { ffi::uc_open(arch, mode, &mut handle) };
         if err == uc_error::OK {
             Ok(Unicorn {
@@ -191,8 +182,8 @@ where
     }
 }
 
-impl<'a, D> core::fmt::Debug for Unicorn<'a, D> {
-    fn fmt(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+impl<'a, D> fmt::Debug for Unicorn<'a, D> {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "Unicorn {{ uc: {:p} }}", self.inner().uc)
     }
 }
@@ -208,8 +199,6 @@ impl<'a, D> Unicorn<'a, D> {
 
     /// Return whatever data was passed during initialization.
     ///
-    /// For an example, have a look at `utils::init_emu_with_heap` where
-    /// a struct is passed which is used for a custom allocator.
     #[must_use]
     pub fn get_data(&self) -> &D {
         &self.inner().data
@@ -230,12 +219,12 @@ impl<'a, D> Unicorn<'a, D> {
     /// Returns a vector with the memory regions that are mapped in the emulator.
     pub fn mem_regions(&self) -> Result<Vec<MemRegion>, uc_error> {
         let mut nb_regions: u32 = 0;
-        let p_regions: *const MemRegion = core::ptr::null_mut();
+        let p_regions: *const MemRegion = ptr::null_mut();
         let err = unsafe { ffi::uc_mem_regions(self.inner().uc, &p_regions, &mut nb_regions) };
         if err == uc_error::OK {
             let mut regions = Vec::new();
             for i in 0..nb_regions {
-                regions.push(unsafe { core::mem::transmute_copy(&*p_regions.add(i as usize)) });
+                regions.push(unsafe { mem::transmute_copy(&*p_regions.add(i as usize)) });
             }
             unsafe { libc::free(p_regions as _) };
             Ok(regions)
@@ -513,54 +502,51 @@ impl<'a, D> Unicorn<'a, D> {
     /// Read 128, 256 or 512 bit register value into heap allocated byte array.
     ///
     /// This adds safe support for registers >64 bit (GDTR/IDTR, XMM, YMM, ZMM, ST (x86); Q, V (arm64)).
-    pub fn reg_read_long<T: Into<i32>>(&self, regid: T) -> Result<Box<[u8]>, uc_error> {
-        let err: uc_error;
-        let boxed: Box<[u8]>;
-        let mut value: Vec<u8>;
+    pub fn reg_read_long<T: Into<i32>>(&self, regid: T) -> Result<ArrayVec<[u8; 64]>, uc_error> {
         let curr_reg_id = regid.into();
         let curr_arch = self.get_arch();
+        let zeros = [0u8; 64];
 
-        if curr_arch == Arch::X86 {
-            if curr_reg_id >= x86::RegisterX86::XMM0 as i32
-                && curr_reg_id <= x86::RegisterX86::XMM31 as i32
+        let mut value = if curr_arch == Arch::X86 {
+            if curr_reg_id >= x86::Register::XMM0 as i32
+                && curr_reg_id <= x86::Register::XMM31 as i32
             {
-                value = vec![0; 16];
-            } else if curr_reg_id >= x86::RegisterX86::YMM0 as i32
-                && curr_reg_id <= x86::RegisterX86::YMM31 as i32
+                ArrayVec::from_array_len(zeros, 16)
+            } else if curr_reg_id >= x86::Register::YMM0 as i32
+                && curr_reg_id <= x86::Register::YMM31 as i32
             {
-                value = vec![0; 32];
-            } else if curr_reg_id >= x86::RegisterX86::ZMM0 as i32
-                && curr_reg_id <= x86::RegisterX86::ZMM31 as i32
+                ArrayVec::from_array_len(zeros, 32)
+            } else if curr_reg_id >= x86::Register::ZMM0 as i32
+                && curr_reg_id <= x86::Register::ZMM31 as i32
             {
-                value = vec![0; 64];
-            } else if curr_reg_id == x86::RegisterX86::GDTR as i32
-                || curr_reg_id == x86::RegisterX86::IDTR as i32
-                || (curr_reg_id >= x86::RegisterX86::ST0 as i32
-                    && curr_reg_id <= x86::RegisterX86::ST7 as i32)
+                ArrayVec::from(zeros)
+            } else if curr_reg_id == x86::Register::GDTR as i32
+                || curr_reg_id == x86::Register::IDTR as i32
+                || (curr_reg_id >= x86::Register::ST0 as i32
+                    && curr_reg_id <= x86::Register::ST7 as i32)
             {
-                value = vec![0; 10]; // 64 bit base address in IA-32e mode
+                ArrayVec::from_array_len(zeros, 10)
             } else {
                 return Err(uc_error::ARG);
             }
         } else if curr_arch == Arch::ARM64 {
-            if (curr_reg_id >= arm64::RegisterARM64::Q0 as i32
-                && curr_reg_id <= arm64::RegisterARM64::Q31 as i32)
-                || (curr_reg_id >= arm64::RegisterARM64::V0 as i32
-                    && curr_reg_id <= arm64::RegisterARM64::V31 as i32)
+            if (curr_reg_id >= arm64::Register::Q0 as i32
+                && curr_reg_id <= arm64::Register::Q31 as i32)
+                || (curr_reg_id >= arm64::Register::V0 as i32
+                    && curr_reg_id <= arm64::Register::V31 as i32)
             {
-                value = vec![0; 16];
+                ArrayVec::from_array_len(zeros, 16)
             } else {
                 return Err(uc_error::ARG);
             }
         } else {
             return Err(uc_error::ARCH);
-        }
+        };
 
-        err = unsafe { ffi::uc_reg_read(self.inner().uc, curr_reg_id, value.as_mut_ptr() as _) };
+        let err = unsafe { ffi::uc_reg_read(self.inner().uc, curr_reg_id, value.as_mut_ptr() as _) };
 
         if err == uc_error::OK {
-            boxed = value.into_boxed_slice();
-            Ok(boxed)
+            Ok(value)
         } else {
             Err(err)
         }
@@ -586,9 +572,9 @@ impl<'a, D> Unicorn<'a, D> {
         callback: F,
     ) -> Result<ffi::uc_hook, uc_error>
     where
-        F: FnMut(&mut crate::Unicorn<D>, u64, u32) + 'a,
+        F: FnMut(&mut Unicorn<D>, u64, u32) + 'a,
     {
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -620,7 +606,7 @@ impl<'a, D> Unicorn<'a, D> {
     where
         F: FnMut(&mut Unicorn<D>, u64, u32),
     {
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -663,7 +649,7 @@ impl<'a, D> Unicorn<'a, D> {
             return Err(uc_error::ARG);
         }
 
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -696,7 +682,7 @@ impl<'a, D> Unicorn<'a, D> {
     where
         F: FnMut(&mut Unicorn<D>, u32),
     {
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -729,7 +715,7 @@ impl<'a, D> Unicorn<'a, D> {
     where
         F: FnMut(&mut Unicorn<D>, u32, usize),
     {
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -746,7 +732,7 @@ impl<'a, D> Unicorn<'a, D> {
                 user_data.as_mut() as *mut _ as _,
                 0,
                 0,
-                x86::InsnX86::IN,
+                x86::Insn::IN,
             )
         };
         if err == uc_error::OK {
@@ -763,7 +749,7 @@ impl<'a, D> Unicorn<'a, D> {
     where
         F: FnMut(&mut Unicorn<D>, u32, usize, u32),
     {
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -780,7 +766,7 @@ impl<'a, D> Unicorn<'a, D> {
                 user_data.as_mut() as *mut _ as _,
                 0,
                 0,
-                x86::InsnX86::OUT,
+                x86::Insn::OUT,
             )
         };
         if err == uc_error::OK {
@@ -795,7 +781,7 @@ impl<'a, D> Unicorn<'a, D> {
     /// Add hook for x86 SYSCALL or SYSENTER.
     pub fn add_insn_sys_hook<F>(
         &mut self,
-        insn_type: x86::InsnSysX86,
+        insn_type: x86::InsnSys,
         begin: u64,
         end: u64,
         callback: F,
@@ -803,7 +789,7 @@ impl<'a, D> Unicorn<'a, D> {
     where
         F: FnMut(&mut Unicorn<D>) + 'a,
     {
-        let mut hook_ptr = core::ptr::null_mut();
+        let mut hook_ptr = ptr::null_mut();
         let mut user_data = Box::new(ffi::UcHook {
             callback,
             uc: Unicorn {
@@ -967,14 +953,14 @@ impl<'a, D> Unicorn<'a, D> {
     pub fn pc_read(&self) -> Result<u64, uc_error> {
         let arch = self.get_arch();
         let reg = match arch {
-            Arch::X86 => RegisterX86::RIP as i32,
-            Arch::ARM => RegisterARM::PC as i32,
-            Arch::ARM64 => RegisterARM64::PC as i32,
-            Arch::MIPS => RegisterMIPS::PC as i32,
-            Arch::SPARC => RegisterSPARC::PC as i32,
-            Arch::M68K => RegisterM68K::PC as i32,
-            Arch::PPC => RegisterPPC::PC as i32,
-            Arch::RISCV => RegisterRISCV::PC as i32,
+            Arch::X86 => x86::Register::RIP as i32,
+            Arch::ARM => arm::Register::PC as i32,
+            Arch::ARM64 => arm64::Register::PC as i32,
+            Arch::MIPS => mips::Register::PC as i32,
+            Arch::SPARC => sparc::Register::PC as i32,
+            Arch::M68K => m68k::Register::PC as i32,
+            Arch::PPC => ppc::Register::PC as i32,
+            Arch::RISCV => riscv::Register::PC as i32,
             Arch::MAX => panic!("Illegal Arch specified"),
         };
         self.reg_read(reg)
@@ -982,17 +968,17 @@ impl<'a, D> Unicorn<'a, D> {
 
     /// Sets the program counter for this `unicorn` instance.
     #[inline]
-    pub fn set_pc(&mut self, value: u64) -> Result<(), uc_error> {
+    pub fn pc_write(&mut self, value: u64) -> Result<(), uc_error> {
         let arch = self.get_arch();
         let reg = match arch {
-            Arch::X86 => RegisterX86::RIP as i32,
-            Arch::ARM => RegisterARM::PC as i32,
-            Arch::ARM64 => RegisterARM64::PC as i32,
-            Arch::MIPS => RegisterMIPS::PC as i32,
-            Arch::SPARC => RegisterSPARC::PC as i32,
-            Arch::M68K => RegisterM68K::PC as i32,
-            Arch::PPC => RegisterPPC::PC as i32,
-            Arch::RISCV => RegisterRISCV::PC as i32,
+            Arch::X86 => x86::Register::RIP as i32,
+            Arch::ARM => arm::Register::PC as i32,
+            Arch::ARM64 => arm64::Register::PC as i32,
+            Arch::MIPS => mips::Register::PC as i32,
+            Arch::SPARC => sparc::Register::PC as i32,
+            Arch::M68K => m68k::Register::PC as i32,
+            Arch::PPC => ppc::Register::PC as i32,
+            Arch::RISCV => riscv::Register::PC as i32,
             Arch::MAX => panic!("Illegal Arch specified"),
         };
         self.reg_write(reg, value)

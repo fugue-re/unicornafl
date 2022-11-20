@@ -2,7 +2,7 @@
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
 #[allow(clippy::upper_case_acronyms, non_camel_case_types)]
-pub enum RegisterX86 {
+pub enum Register {
     INVALID = 0,
     AH = 1,
     AL = 2,
@@ -240,8 +240,8 @@ pub enum RegisterX86 {
     ENDING = 234,
 }
 
-impl From<RegisterX86> for i32 {
-    fn from(r: RegisterX86) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }
@@ -249,7 +249,7 @@ impl From<RegisterX86> for i32 {
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
 #[allow(clippy::upper_case_acronyms)]
-pub enum InsnX86 {
+pub enum Insn {
     IN = 218,
     OUT = 500,
     SYSCALL = 699,
@@ -260,14 +260,14 @@ pub enum InsnX86 {
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
 #[allow(clippy::upper_case_acronyms)]
-pub enum InsnSysX86 {
-    SYSCALL = InsnX86::SYSCALL as isize,
-    SYSENTER = InsnX86::SYSENTER as isize,
+pub enum InsnSys {
+    SYSCALL = Insn::SYSCALL as isize,
+    SYSENTER = Insn::SYSENTER as isize,
 }
 
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub struct X86Mmr {
+pub struct Mmr {
     pub selector: u64,
     pub base: u64,
     pub limit: u32,

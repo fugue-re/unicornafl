@@ -1,7 +1,7 @@
 // M68K registers
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum RegisterM68K {
+pub enum Register {
     INVALID = 0,
     A0,
     A1,
@@ -23,8 +23,8 @@ pub enum RegisterM68K {
     PC,
 }
 
-impl From<RegisterM68K> for i32 {
-    fn from(r: RegisterM68K) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }

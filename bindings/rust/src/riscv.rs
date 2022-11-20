@@ -4,7 +4,7 @@
 // RISCV registers
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum RegisterRISCV {
+pub enum Register {
     INVALID = 0,
 
     // General purpose registers
@@ -78,7 +78,7 @@ pub enum RegisterRISCV {
     ENDING = 66,
 }
 
-impl RegisterRISCV {
+impl Register {
     // Alias registers
     // (assoc) ZERO = 1,
     // (assoc) RA = 2,
@@ -145,75 +145,75 @@ impl RegisterRISCV {
     // (assoc) FT9 = 62,
     // (assoc) FT10 = 63,
     // (assoc) FT11 = 64,
-    pub const ZERO: RegisterRISCV = RegisterRISCV::X0;
-    pub const RA: RegisterRISCV = RegisterRISCV::X1;
-    pub const SP: RegisterRISCV = RegisterRISCV::X2;
-    pub const GP: RegisterRISCV = RegisterRISCV::X3;
-    pub const TP: RegisterRISCV = RegisterRISCV::X4;
-    pub const T0: RegisterRISCV = RegisterRISCV::X5;
-    pub const T1: RegisterRISCV = RegisterRISCV::X6;
-    pub const T2: RegisterRISCV = RegisterRISCV::X7;
-    pub const S0: RegisterRISCV = RegisterRISCV::X8;
-    pub const FP: RegisterRISCV = RegisterRISCV::X8;
-    pub const S1: RegisterRISCV = RegisterRISCV::X9;
-    pub const A0: RegisterRISCV = RegisterRISCV::X10;
-    pub const A1: RegisterRISCV = RegisterRISCV::X11;
-    pub const A2: RegisterRISCV = RegisterRISCV::X12;
-    pub const A3: RegisterRISCV = RegisterRISCV::X13;
-    pub const A4: RegisterRISCV = RegisterRISCV::X14;
-    pub const A5: RegisterRISCV = RegisterRISCV::X15;
-    pub const A6: RegisterRISCV = RegisterRISCV::X16;
-    pub const A7: RegisterRISCV = RegisterRISCV::X17;
-    pub const S2: RegisterRISCV = RegisterRISCV::X18;
-    pub const S3: RegisterRISCV = RegisterRISCV::X19;
-    pub const S4: RegisterRISCV = RegisterRISCV::X20;
-    pub const S5: RegisterRISCV = RegisterRISCV::X21;
-    pub const S6: RegisterRISCV = RegisterRISCV::X22;
-    pub const S7: RegisterRISCV = RegisterRISCV::X23;
-    pub const S8: RegisterRISCV = RegisterRISCV::X24;
-    pub const S9: RegisterRISCV = RegisterRISCV::X25;
-    pub const S10: RegisterRISCV = RegisterRISCV::X26;
-    pub const S11: RegisterRISCV = RegisterRISCV::X27;
-    pub const T3: RegisterRISCV = RegisterRISCV::X28;
-    pub const T4: RegisterRISCV = RegisterRISCV::X29;
-    pub const T5: RegisterRISCV = RegisterRISCV::X30;
-    pub const T6: RegisterRISCV = RegisterRISCV::X31;
-    pub const FT0: RegisterRISCV = RegisterRISCV::F0;
-    pub const FT1: RegisterRISCV = RegisterRISCV::F1;
-    pub const FT2: RegisterRISCV = RegisterRISCV::F2;
-    pub const FT3: RegisterRISCV = RegisterRISCV::F3;
-    pub const FT4: RegisterRISCV = RegisterRISCV::F4;
-    pub const FT5: RegisterRISCV = RegisterRISCV::F5;
-    pub const FT6: RegisterRISCV = RegisterRISCV::F6;
-    pub const FT7: RegisterRISCV = RegisterRISCV::F7;
-    pub const FS0: RegisterRISCV = RegisterRISCV::F8;
-    pub const FS1: RegisterRISCV = RegisterRISCV::F9;
-    pub const FA0: RegisterRISCV = RegisterRISCV::F10;
-    pub const FA1: RegisterRISCV = RegisterRISCV::F11;
-    pub const FA2: RegisterRISCV = RegisterRISCV::F12;
-    pub const FA3: RegisterRISCV = RegisterRISCV::F13;
-    pub const FA4: RegisterRISCV = RegisterRISCV::F14;
-    pub const FA5: RegisterRISCV = RegisterRISCV::F15;
-    pub const FA6: RegisterRISCV = RegisterRISCV::F16;
-    pub const FA7: RegisterRISCV = RegisterRISCV::F17;
-    pub const FS2: RegisterRISCV = RegisterRISCV::F18;
-    pub const FS3: RegisterRISCV = RegisterRISCV::F19;
-    pub const FS4: RegisterRISCV = RegisterRISCV::F20;
-    pub const FS5: RegisterRISCV = RegisterRISCV::F21;
-    pub const FS6: RegisterRISCV = RegisterRISCV::F22;
-    pub const FS7: RegisterRISCV = RegisterRISCV::F23;
-    pub const FS8: RegisterRISCV = RegisterRISCV::F24;
-    pub const FS9: RegisterRISCV = RegisterRISCV::F25;
-    pub const FS10: RegisterRISCV = RegisterRISCV::F26;
-    pub const FS11: RegisterRISCV = RegisterRISCV::F27;
-    pub const FT8: RegisterRISCV = RegisterRISCV::F28;
-    pub const FT9: RegisterRISCV = RegisterRISCV::F29;
-    pub const FT10: RegisterRISCV = RegisterRISCV::F30;
-    pub const FT11: RegisterRISCV = RegisterRISCV::F31;
+    pub const ZERO: Register = Register::X0;
+    pub const RA: Register = Register::X1;
+    pub const SP: Register = Register::X2;
+    pub const GP: Register = Register::X3;
+    pub const TP: Register = Register::X4;
+    pub const T0: Register = Register::X5;
+    pub const T1: Register = Register::X6;
+    pub const T2: Register = Register::X7;
+    pub const S0: Register = Register::X8;
+    pub const FP: Register = Register::X8;
+    pub const S1: Register = Register::X9;
+    pub const A0: Register = Register::X10;
+    pub const A1: Register = Register::X11;
+    pub const A2: Register = Register::X12;
+    pub const A3: Register = Register::X13;
+    pub const A4: Register = Register::X14;
+    pub const A5: Register = Register::X15;
+    pub const A6: Register = Register::X16;
+    pub const A7: Register = Register::X17;
+    pub const S2: Register = Register::X18;
+    pub const S3: Register = Register::X19;
+    pub const S4: Register = Register::X20;
+    pub const S5: Register = Register::X21;
+    pub const S6: Register = Register::X22;
+    pub const S7: Register = Register::X23;
+    pub const S8: Register = Register::X24;
+    pub const S9: Register = Register::X25;
+    pub const S10: Register = Register::X26;
+    pub const S11: Register = Register::X27;
+    pub const T3: Register = Register::X28;
+    pub const T4: Register = Register::X29;
+    pub const T5: Register = Register::X30;
+    pub const T6: Register = Register::X31;
+    pub const FT0: Register = Register::F0;
+    pub const FT1: Register = Register::F1;
+    pub const FT2: Register = Register::F2;
+    pub const FT3: Register = Register::F3;
+    pub const FT4: Register = Register::F4;
+    pub const FT5: Register = Register::F5;
+    pub const FT6: Register = Register::F6;
+    pub const FT7: Register = Register::F7;
+    pub const FS0: Register = Register::F8;
+    pub const FS1: Register = Register::F9;
+    pub const FA0: Register = Register::F10;
+    pub const FA1: Register = Register::F11;
+    pub const FA2: Register = Register::F12;
+    pub const FA3: Register = Register::F13;
+    pub const FA4: Register = Register::F14;
+    pub const FA5: Register = Register::F15;
+    pub const FA6: Register = Register::F16;
+    pub const FA7: Register = Register::F17;
+    pub const FS2: Register = Register::F18;
+    pub const FS3: Register = Register::F19;
+    pub const FS4: Register = Register::F20;
+    pub const FS5: Register = Register::F21;
+    pub const FS6: Register = Register::F22;
+    pub const FS7: Register = Register::F23;
+    pub const FS8: Register = Register::F24;
+    pub const FS9: Register = Register::F25;
+    pub const FS10: Register = Register::F26;
+    pub const FS11: Register = Register::F27;
+    pub const FT8: Register = Register::F28;
+    pub const FT9: Register = Register::F29;
+    pub const FT10: Register = Register::F30;
+    pub const FT11: Register = Register::F31;
 }
 
-impl From<RegisterRISCV> for i32 {
-    fn from(r: RegisterRISCV) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }

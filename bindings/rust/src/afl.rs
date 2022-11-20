@@ -1,14 +1,14 @@
 //! Bindings for `unicornafl`
 //!
 
-use core::marker::PhantomData;
+use std::ffi::{c_int, c_void};
+use std::marker::PhantomData;
+use std::slice;
 
-use alloc::{boxed::Box, vec::Vec};
-use libc::{c_int, c_void};
+use crate::consts::uc_error;
+use crate::ffi::uc_handle;
+use crate::Unicorn;
 
-use crate::{ffi::uc_handle, uc_error, Unicorn};
-
-/// FFI for the forkserver
 extern "C" {
     fn uc_afl_forkserver_start(
         engine: uc_handle,
@@ -64,7 +64,7 @@ where
     debug_assert_eq!(uc, user_data.uc.inner().uc);
     debug_assert!(input_len >= 0);
     #[allow(clippy::cast_sign_loss)]
-    let safe_input = core::slice::from_raw_parts_mut(input, input_len as usize);
+    let safe_input = slice::from_raw_parts_mut(input, input_len as usize);
     (user_data.input_callback)(&mut user_data.uc, safe_input, persistent_round)
 }
 
@@ -84,7 +84,7 @@ where
     debug_assert_eq!(uc, user_data.uc.inner().uc);
     debug_assert!(input_len >= 0);
     #[allow(clippy::cast_sign_loss)]
-    let safe_input = core::slice::from_raw_parts_mut(input, input_len as usize);
+    let safe_input = slice::from_raw_parts_mut(input, input_len as usize);
     (user_data.validate_callback)(&mut user_data.uc, error, safe_input, persistent_round)
 }
 

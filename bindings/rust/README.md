@@ -3,8 +3,8 @@
 Rust bindings for the [Unicorn](http://www.unicorn-engine.org/) emulator with AFL++ extensions and utility functions.
 
 ```rust
-use unicornafl::RegisterARM;
-use unicornafl::unicorn_const::{Arch, Mode, Permission, SECOND_SCALE};
+use unicornafl::arm::Register;
+use unicornafl::consts::{Arch, Mode, Permission, SECOND_SCALE};
 
 fn main() {
     let arm_code32: Vec<u8> = vec![0x17, 0x00, 0x40, 0xe2]; // sub r0, #23
@@ -14,12 +14,12 @@ fn main() {
     emu.mem_map(0x1000, 0x4000, Permission::ALL).expect("failed to map code page");
     emu.mem_write(0x1000, &arm_code32).expect("failed to write instructions");
 
-    emu.reg_write(RegisterARM::R0 as i32, 123).expect("failed write R0");
-    emu.reg_write(RegisterARM::R5 as i32, 1337).expect("failed write R5");
+    emu.reg_write(Register::R0 as i32, 123).expect("failed write R0");
+    emu.reg_write(Register::R5 as i32, 1337).expect("failed write R5");
 
     let _ = emu.emu_start(0x1000, (0x1000 + arm_code32.len()) as u64, 10 * SECOND_SCALE, 1000);
-    assert_eq!(emu.reg_read(RegisterARM::R0 as i32), Ok(100));
-    assert_eq!(emu.reg_read(RegisterARM::R5 as i32), Ok(1337));
+    assert_eq!(emu.reg_read(Register::R0 as i32), Ok(100));
+    assert_eq!(emu.reg_read(Register::R5 as i32), Ok(1337));
 }
 ```
 
@@ -37,13 +37,9 @@ let ret = emu.afl_fuzz(
     );
 ```
 
-Moreover, they come with some basic utility functionalities, such as
-a simple heap allocator utilizing Unicorn hooks for sanitization or easily accessible debug prints. 
-These are WIP and only tested in ARM LITTLE_ENDIAN mode.
-
 ## Installation
 
-This project has been tested on Linux, OS X and Windows. 
+This project has been tested on Linux, OS X and Windows.
 The bindings are built for version 1.0 of unicorn.
 
 First, build AFL++ and Unicorn mode.
@@ -65,5 +61,5 @@ Thanks to all contributers.
 ## Contributing
 
 Contributions to this project are appreciated. Pull requests, bug reports, code review, tests,
-documentation or feedback on your use of the bindings, everything is appreciated. 
+documentation or feedback on your use of the bindings, everything is appreciated.
 If you have any questions, please feel free to open an issue.

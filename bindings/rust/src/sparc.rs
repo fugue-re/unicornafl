@@ -2,7 +2,7 @@
 #[repr(C)]
 #[derive(PartialEq, Debug, Clone, Copy)]
 #[allow(clippy::upper_case_acronyms)]
-pub enum RegisterSPARC {
+pub enum Register {
     INVALID = 0,
     F0 = 1,
     F1 = 2,
@@ -95,16 +95,16 @@ pub enum RegisterSPARC {
     ENDING = 89,
 }
 
-impl RegisterSPARC {
+impl Register {
     // alias registers
     // (assoc) O6 = 84,
     // (assoc) I6 = 67,
-    pub const O6: RegisterSPARC = RegisterSPARC::SP;
-    pub const I6: RegisterSPARC = RegisterSPARC::FP;
+    pub const O6: Register = Register::SP;
+    pub const I6: Register = Register::FP;
 }
 
-impl From<RegisterSPARC> for i32 {
-    fn from(r: RegisterSPARC) -> Self {
+impl From<Register> for i32 {
+    fn from(r: Register) -> Self {
         r as i32
     }
 }
